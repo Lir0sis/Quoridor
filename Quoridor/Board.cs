@@ -227,7 +227,12 @@ namespace Quoridor
                     this.board[i, j].walls.Add(new Vec2(dirX, dirY));
                 }
 
-            if (aStar())
+            bool isPassable = true;
+            for (int i = 0; i < players.Length; i++)
+                if (!(aStar(new Vec2(players[i].x, players[i].y), players[i].winDir).Count > 0))
+                    isPassable = false;
+
+            if (!isPassable)
                 return new Quoridor.Turn(
                     Quoridor.TurnStatus.PLACED,
                     Quoridor.MoveChoice.WALL,
@@ -316,8 +321,37 @@ namespace Quoridor
             return pieces;
         }
 
-        public List<Vec2> aStar(Vec2 start, Vec2 end, Func<Piece, float> heuristic)
+        private int getWinDistance(Vec2 pos, Vec2 winDir)
         {
+            return 0; //pos.x * Math.Abs(winDir.x) - game.board.size * 
+        }
+
+        struct Node
+        {
+            public Vec2 pos;
+            public Vec2 value;
+            public Node(Vec2 pos, Vec2 val)
+            {
+                this.pos = pos;
+                value = val;
+            }
+        }
+        public List<Vec2> aStar(Vec2 start, Vec2 winDir)
+        {
+            var nodes = new Dictionary<Vec2, Vec2?>();
+            nodes[start] = null;
+
+            var closed = new HashSet<Vec2>();
+            var opend = new List<Node>();
+            opend.Add(new Node(start, new Vec2(1, 0)));
+
+            while (opend.Count > 0)
+            {
+                var curr_node = opend[0];
+                opend.RemoveAt(0);
+
+                closed.Add(curr_node.pos);
+            }
             return null;
         }
 

@@ -24,7 +24,7 @@ namespace Quoridor
             switch (splitCommand[0].ToLower())
             {
                 case "start":
-                    if (splitCommand.Length != 3)
+                    if (splitCommand.Length == 3)
                     {
                         var players = int.Parse(splitCommand[1]);
                         var bots = int.Parse(splitCommand[2]);
