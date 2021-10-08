@@ -7,7 +7,7 @@ namespace Quoridor
     {
         public struct Turn
         {
-            public Turn(TurnStatus result, MoveChoice choice, MoveChoice next, Vec2 pos, List<Vec2> ways = null)
+            public Turn(TurnStatus result, MoveChoice choice, MoveChoice next, Vec2<int> pos, List<Vec2<int>> ways = null)
             {
                 this.result = result;
                 this.ways = ways;
@@ -17,8 +17,8 @@ namespace Quoridor
             }
 
             public TurnStatus result;
-            public List<Vec2> ways;
-            public Vec2 pos;
+            public List<Vec2<int>> ways;
+            public Vec2<int> pos;
             public MoveChoice next;
             public MoveChoice choice;
         }
@@ -44,7 +44,7 @@ namespace Quoridor
         {
             if (playerCount > 4 && playerCount % 2 != 0)
             {
-                lastMove = new Turn(TurnStatus.WRONG, MoveChoice.NONE, MoveChoice.NONE, new Vec2(0, 0));
+                lastMove = new Turn(TurnStatus.WRONG, MoveChoice.NONE, MoveChoice.NONE, new Vec2<int>(0, 0));
                 return;
             }
             this.board = new Board(playerCount, boardSize);

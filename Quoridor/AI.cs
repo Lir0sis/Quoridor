@@ -19,7 +19,7 @@ namespace Quoridor
             {
                 int x = App.rand.Next(0, game.board.size);
                 int y = App.rand.Next(0, game.board.size);
-                args.Add(new Vec2(x, y));
+                args.Add(new Vec2<int>(x, y));
             }
             else if (choice == Quoridor.MoveChoice.WALL)
             {
@@ -28,7 +28,7 @@ namespace Quoridor
                 
                 bool isVertical = Convert.ToBoolean(App.rand.Next(0, 1));
                 args.Add(isVertical);
-                args.Add(new Vec2(x, y));
+                args.Add(new Vec2<int>(x, y));
             }
             game.MakeMove(choice, args.ToArray());
         }

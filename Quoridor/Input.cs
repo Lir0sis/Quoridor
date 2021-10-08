@@ -8,16 +8,16 @@ namespace Quoridor
         Quoridor game = Quoridor.getInstance();
         // App app = App.getInstance();
 
-        static private readonly Dictionary<string, Vec2> directions =
-            new Dictionary<string, Vec2>
+        static private readonly Dictionary<string, Vec2<int>> directions =
+            new Dictionary<string, Vec2<int>>
             {
-                {"up", new Vec2(0, -1)},
-                {"down", new Vec2(0, 1)},
-                {"left", new Vec2(-1, 0)},
-                {"right", new Vec2(1, 0)}
+                {"up", new Vec2<int>(0, -1)},
+                {"down", new Vec2<int>(0, 1)},
+                {"left", new Vec2<int>(-1, 0)},
+                {"right", new Vec2<int>(1, 0)}
             };
 
-        public Vec2 Run()
+        public Vec2<int> Run()
         {
             var splitCommand = Console.ReadLine().Split(new char[0]);
 
@@ -29,7 +29,7 @@ namespace Quoridor
                         var players = int.Parse(splitCommand[1]);
                         var bots = int.Parse(splitCommand[2]);
                         game.Start(playerCount: players);
-                        return new Vec2(players, bots);
+                        return new Vec2<int>(players, bots);
                     }
                     else
                         game.Start();
@@ -45,11 +45,11 @@ namespace Quoridor
                     var x = int.Parse(splitCommand[1]);
                     var y = int.Parse(splitCommand[2]);
                     var isVertical = Convert.ToBoolean(int.Parse(splitCommand[3]));
-                    game.MakeMove(Quoridor.MoveChoice.WALL, new dynamic[] { new Vec2(x, y), isVertical });
+                    game.MakeMove(Quoridor.MoveChoice.WALL, new dynamic[] { new Vec2<int>(x, y), isVertical });
                     break;
             }
 
-            return new Vec2(-1,-1);
+            return new Vec2<int>(-1,-1);
 
         }
     }
