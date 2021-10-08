@@ -289,13 +289,13 @@ namespace Quoridor
         private Wall[,] fillCenterWalls()
         {
             Wall[,] walls = new Wall[this.size - 1, this.size - 1];
-            int half = (this.size + 1) / 2;
+            int half = (this.size - 1) / 2;
             directions.ForEach(vec =>
             {
                 for (int i = 0; i < this.size - 1; i++)
                 {
-                    int x = vec.x == 0 ? i : (vec.x + 1) * half;
-                    int y = vec.y == 0 ? i : (vec.y + 1) * half;
+                    int x = vec.x == 0 ? i : (vec.x + 1 == 0 ? (vec.x + 1) * half : (vec.x + 1) * half - 1);
+                    int y = vec.y == 0 ? i : (vec.y + 1 == 0 ? (vec.y + 1) * half : (vec.y + 1) * half - 1);
                     walls[x, y] = new Wall(x, y,
                         !Convert.ToBoolean(Math.Abs(vec.y)));
                 }
@@ -326,6 +326,26 @@ namespace Quoridor
             return 0; //pos.x * Math.Abs(winDir.x) - game.board.size * 
         }
 
+        private List<Node> getNeighbours(float cost, Vec2 pos)
+        {
+            var neighbours = new List<Node>();
+            foreach(var dir in directions) {
+                if (board[pos.x, pos.y].walls.Contains(dir))
+                    continue;
+
+                var cellPos = new Vec2(pos.x + dir.x, pos.y + dir.y);
+                if (cellPos.x < 0 || cellPos.x >= this.size || cellPos.y < 0 || cellPos.y >= this.size)
+                    continue;
+
+                var cell = board[cellPos.x, cellPos.y];
+                
+                
+                    
+            }
+
+            return neighbours;
+        }
+
         struct Node
         {
             public Vec2 pos;
@@ -351,6 +371,13 @@ namespace Quoridor
                 opend.RemoveAt(0);
 
                 closed.Add(curr_node.pos);
+
+                if (getWinDistance(start, winDir) == 0)
+                    break;
+                else
+                {
+
+                }
             }
             return null;
         }

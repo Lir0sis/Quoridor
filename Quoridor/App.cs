@@ -10,6 +10,7 @@ namespace Quoridor
 
         Quoridor game;
         PlayerType[] playOrder;
+        int botsCount;
         ConsoleInput input;
         ConsoleOutput output;
 
@@ -24,6 +25,7 @@ namespace Quoridor
         public void Run()
         {
             var bots = input.Run();
+            botsCount = bots.y;
             // var status = output.Run();
             if (bots.y != -1)
             {
@@ -41,7 +43,7 @@ namespace Quoridor
                 }
             }
 
-            while (playOrder[Quoridor.currentPlayer] != PlayerType.HUMAN)
+            while (botsCount > 0 && playOrder[Quoridor.currentPlayer] != PlayerType.HUMAN)
             {
                 AI.MakeMove();
             }

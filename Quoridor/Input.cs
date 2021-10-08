@@ -44,7 +44,7 @@ namespace Quoridor
                 case "place":
                     var x = int.Parse(splitCommand[1]);
                     var y = int.Parse(splitCommand[2]);
-                    var isVertical = Convert.ToBoolean(splitCommand[3]);
+                    var isVertical = Convert.ToBoolean(int.Parse(splitCommand[3]));
                     game.MakeMove(Quoridor.MoveChoice.WALL, new dynamic[] { new Vec2(x, y), isVertical });
                     break;
             }
