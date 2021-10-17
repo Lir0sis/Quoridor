@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading;
 
 namespace Quoridor
 {
@@ -24,30 +24,46 @@ namespace Quoridor
 
         public void Run()
         {
-            var bots = input.Run();
-            botsCount = bots.y;
-            // var status = output.Run();
-            if (bots.y != -1)
+            if (game.lastMove.result == Quoridor.TurnStatus.WRONG
+                && game.lastMove.choice == Quoridor.MoveChoice.NONE 
+                || game.lastMove.result == Quoridor.TurnStatus.WON)
             {
-                playOrder = new PlayerType[bots.x];
-                for (int n = 0; n < bots.x; n++)
+                Vec2<int> @params = input.Run();
+                if (@params.y != -1)
                 {
-                    int i;
-                    do
+                    playOrder = new PlayerType[@params.x];
+                    for (int n = 0; n < @params.y; n++)
                     {
-                        i = rand.Next(0, bots.x);
+                        while (true)
+                        {
+                            var i = rand.Next(0, @params.x);
+                            if (playOrder[i] == PlayerType.HUMAN)
+                            {
+                                playOrder[i] = PlayerType.AI;
+                                break;
+                            }
+                        }
                     }
-                    while (playOrder[i] == 0);
-
-                    playOrder[i] = PlayerType.AI;
+                    this.botsCount = @params.y;
                 }
+                return;
             }
 
-            while (botsCount > 0 && playOrder[Quoridor.currentPlayer] != PlayerType.HUMAN)
+            output.Run();
+
+            if (game.lastMove.result == Quoridor.TurnStatus.WON)
+                return;
+
+            if (playOrder[Quoridor.currentPlayer] == PlayerType.HUMAN)
+                input.Run();
+            else if (playOrder[Quoridor.currentPlayer] == PlayerType.AI)
             {
+                Thread.Sleep(100);
                 AI.MakeMove();
             }
-            output.Run();
+
+            if (game.lastMove.result == Quoridor.TurnStatus.WON)
+                output.Run();
         }
 
         static public void Main()

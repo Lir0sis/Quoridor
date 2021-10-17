@@ -23,7 +23,7 @@ namespace Quoridor
             public MoveChoice choice;
         }
         public enum MoveChoice { WALL, MOVE, JUMP, NONE }
-        public enum TurnStatus { MOVED, PLACED, JUMPED, WRONG, WON}
+        public enum TurnStatus { MOVED, PLACED, JUMPED, WRONG, STARTED, WON}
 
         public Turn lastMove;
         public Piece[] players;
@@ -38,32 +38,41 @@ namespace Quoridor
             return instance;
         }
 
-        private Quoridor() {}
+        private Quoridor() 
+        {
+            lastMove = new Turn(TurnStatus.WRONG, MoveChoice.NONE, MoveChoice.NONE, new Vec2<int>(-1, -1));
+        }
 
         public void Start(int boardSize = 9, int playerCount = 2)
         {
-            if (playerCount > 4 && playerCount % 2 != 0)
+            if (playerCount != 2 && playerCount != 4)
             {
-                lastMove = new Turn(TurnStatus.WRONG, MoveChoice.NONE, MoveChoice.NONE, new Vec2<int>(0, 0));
+                lastMove = new Turn(TurnStatus.WRONG, MoveChoice.NONE, MoveChoice.NONE, new Vec2<int>(-1, -1));
                 return;
             }
             this.board = new Board(playerCount, boardSize);
+            lastMove = new Turn(TurnStatus.STARTED, MoveChoice.NONE, MoveChoice.NONE, new Vec2<int>(-1, -1));
         }
 
         public void MakeMove(MoveChoice choice, dynamic[] args)
         {
+            if (lastMove.result == TurnStatus.WON || lastMove.result == TurnStatus.WRONG && lastMove.choice == MoveChoice.NONE)
+                return;
+
             if (choice == MoveChoice.MOVE) {
                 if (lastMove.next == MoveChoice.JUMP)
                     lastMove = board.jumpOver(lastMove, args[0], currentPlayer);
-                lastMove = board.movePiece(currentPlayer, args[0]);
+                else
+                    lastMove = board.movePiece(currentPlayer, args[0]);
+
             }
             else if (choice == MoveChoice.WALL)
             {
-                lastMove = board.placeWall(args[1], args[0]);
+                lastMove = board.placeWall(args[0], args[1]);
             }
-            if (lastMove.result == TurnStatus.WON)
+            
+            if (lastMove.result == TurnStatus.WRONG || lastMove.result == TurnStatus.WON || lastMove.next == MoveChoice.JUMP)
                 return;
-
             switchPlayer();
         }
 

@@ -31,7 +31,7 @@ namespace Quoridor
 
             this.size = size;
             board = createBoard();
-            walls = fillCenterWalls();
+            walls = new Wall[size - 1, size - 1];//fillCenterWalls();
             players = createPieces(playerCount);
             game.players = players;
         }
@@ -76,6 +76,14 @@ namespace Quoridor
 
             int next_x = x + dir.x,
                 next_y = y + dir.y;
+
+            if (next_x >= size || next_x < 0 || next_y >= size || next_y < 0)
+                return new Quoridor.Turn(
+                    Quoridor.TurnStatus.WRONG,
+                    Quoridor.MoveChoice.MOVE,
+                    Quoridor.MoveChoice.NONE,
+                    new Vec2<int>(next_x, next_y)
+                    );
 
             if (board[x, y].walls.Contains(dir))
                 return new Quoridor.Turn(
@@ -150,8 +158,9 @@ namespace Quoridor
         
         private bool hasWon(Piece player)
         {
-            return player.x * Math.Abs(player.winDir.x) == player.winDir.x * (size - 1) 
-                && player.y * Math.Abs(player.winDir.y) == player.winDir.y * (size - 1);
+            int half = (this.size - 1) / 2;
+            return player.x * Math.Abs(player.winDir.x) == (player.winDir.x + 1) * Math.Abs(player.winDir.x) * half
+                && player.y * Math.Abs(player.winDir.y) == (player.winDir.y + 1) * Math.Abs(player.winDir.y) * half;
         }
 
         public Quoridor.Turn jumpOver(Quoridor.Turn turn, Vec2<int> dir, int player)
@@ -184,7 +193,7 @@ namespace Quoridor
 
         public Quoridor.Turn placeWall(bool isVertical, Vec2<int> target)
         {
-            if (!(1 <= target.x && target.x < size) ||
+            if (players[Quoridor.currentPlayer].wallsLeft == 0 || !(1 <= target.x && target.x < size) ||
                 !(1 <= target.y && target.y < size))
                 return new Quoridor.Turn(
                     Quoridor.TurnStatus.WRONG,
@@ -212,7 +221,7 @@ namespace Quoridor
                 for (int i = target.x - 1; i <= target.x + 1; i++)
                 {
                     var wall = this.walls[i, target.y];
-                    if (wall != null && wall.isVertical)
+                    if (wall != null && !wall.isVertical)
                         return new Quoridor.Turn(
                             Quoridor.TurnStatus.WRONG,
                             Quoridor.MoveChoice.WALL,
@@ -225,11 +234,11 @@ namespace Quoridor
             this.walls[target.x, target.y] = new Wall(target.x, target.y, isVertical);
             List<Cell> saved_cells = new List<Cell>();
 
-            for (int i = target.x - 1; i <= target.x; i++)
-                for (int j = target.y - 1; j <= target.y; j++)
+            for (int i = target.x; i <= target.x + 1; i++)
+                for (int j = target.y; j <= target.y + 1; j++)
                 {
-                    int dirX = Convert.ToInt32(isVertical) * ((target.x * 2 - 1) - i * 2);
-                    int dirY = Convert.ToInt32(!isVertical) * ((target.y * 2 - 1) - j * 2);
+                    int dirX = Convert.ToInt32(isVertical) * ((i - target.x) * -2 + 1);
+                    int dirY = Convert.ToInt32(!isVertical) * ((j - target.y) * -2 + 1);
 
                     saved_cells.Add(this.board[i, j].deepCopy());
                     this.board[i, j].walls.Add(new Vec2<int>(dirX, dirY));
@@ -237,16 +246,22 @@ namespace Quoridor
 
             bool isPassable = true;
             for (int i = 0; i < players.Length; i++)
-                if (!(aStar(new Vec2<int>(players[i].x, players[i].y), players[i].winDir).Count > 0))
+            {
+                List<Vec2<int>> path = aStar(new Vec2<int>(players[i].x, players[i].y), players[i].winDir);
+                if (path == null || !(path.Count > 0))
                     isPassable = false;
+            }
 
-            if (!isPassable)
+            if (isPassable)
+            {
+                players[Quoridor.currentPlayer].wallsLeft--;
                 return new Quoridor.Turn(
                     Quoridor.TurnStatus.PLACED,
                     Quoridor.MoveChoice.WALL,
                     Quoridor.MoveChoice.NONE,
                     new Vec2<int>(target.x, target.y)
                     );
+            }
             else
             {
                 int index = 0;
@@ -316,7 +331,10 @@ namespace Quoridor
             {
                 int x = (directions[i].x + 1) * half;
                 int y = (directions[i].y + 1) * half;
-                pieces[i] = new Piece(x, y, directions[i]);
+
+                var winDir = new Vec2<int>(directions[i].x * -1, directions[i].y * -1);
+
+                pieces[i] = new Piece(x, y, winDir, 20/n);
                 board[x, y].player = pieces[i];
             }
             return pieces;
@@ -372,8 +390,9 @@ namespace Quoridor
         }
         public List<Vec2<int>> aStar(Vec2<int> start, Vec2<int> winDir)
         {
-            var nodes = new Dictionary<Vec2<int>, Vec2<int>?>();
-            nodes[start] = null;
+            var node_path = new Dictionary<Vec2<int>, Vec2<int>?>();
+            node_path[start] = null;
+            Vec2<int>? end = null;
 
             var closed = new HashSet<Vec2<int>>();
             var opend = new List<Node>();
@@ -386,12 +405,15 @@ namespace Quoridor
 
                 closed.Add(curr_node.pos);
 
-                if (getWinDistance(start, winDir) == 0)
+                if (getWinDistance(curr_node.pos, winDir) == 0)
+                {
+                    end = curr_node.pos;
                     break;
+                }
                 else
                 {
                     var neighbours = getNeighbours(curr_node.value.x, curr_node.pos);
-                    for(int i = 0; i < neighbours.Count; i++)
+                    for (int i = 0; i < neighbours.Count; i++)
                     {
                         var node = neighbours[i];
                         node.value.y = node.value.x + getWinDistance(node.pos, winDir);
@@ -399,7 +421,7 @@ namespace Quoridor
                         if (closed.Contains(node.pos))
                             continue;
 
-                        nodes[node.pos] = curr_node.pos;
+                        node_path[node.pos] = curr_node.pos;
                         if (opend.Contains(node) && opend.Find(x => x.pos.Equals(node.pos)).value.x <= node.value.x)
                             continue;
 
@@ -408,8 +430,24 @@ namespace Quoridor
                     }
                 }
             }
+            if(end == null)
+                return null;
 
-            return null;
+            var path = new List<Vec2<int>>();
+            path.Add((Vec2<int>)end);
+
+            var pos = end;
+            while (pos != null)
+            {
+                var next_pos = node_path[(Vec2<int>)pos];
+                if (next_pos == null)
+                    break;
+
+                path.Add((Vec2<int>)next_pos);
+                pos = next_pos;
+            }
+            path.Reverse();
+            return path;
         }
 
 

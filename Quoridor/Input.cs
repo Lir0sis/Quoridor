@@ -42,10 +42,13 @@ namespace Quoridor
                     game.MakeMove(Quoridor.MoveChoice.MOVE, new dynamic[] { directions[dir] });
                     break;
                 case "place":
-                    var x = int.Parse(splitCommand[1]);
-                    var y = int.Parse(splitCommand[2]);
-                    var isVertical = Convert.ToBoolean(int.Parse(splitCommand[3]));
-                    game.MakeMove(Quoridor.MoveChoice.WALL, new dynamic[] { new Vec2<int>(x, y), isVertical });
+                    if (splitCommand.Length == 4)
+                    {
+                        var x = int.Parse(splitCommand[1]);
+                        var y = int.Parse(splitCommand[2]);
+                        var isVertical = Convert.ToBoolean(int.Parse(splitCommand[3]));
+                        game.MakeMove(Quoridor.MoveChoice.WALL, new dynamic[] { new Vec2<int>(x, y), isVertical });
+                    }
                     break;
             }
 

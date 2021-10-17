@@ -38,7 +38,11 @@ namespace Quoridor
         {
             var copy = (Cell)this.MemberwiseClone();
             var walls = new HashSet<Vec2<int>>();
-            copy.player = new Piece(this.player.x, this.player.y, this.player.winDir);
+            Piece player = null;
+            if (this.player != null)
+                player = new Piece(this.player.x, this.player.y, this.player.winDir, this.player.wallsLeft);
+
+            copy.player = player;
 
             Vec2<int>[] coppiedWalls = new Vec2<int>[this.walls.Count];
             this.walls.CopyTo(coppiedWalls);
@@ -69,10 +73,12 @@ namespace Quoridor
         public int x;
         public int y;
         public Vec2<int> winDir;
+        public int wallsLeft;
         private Board board;
 
-        public Piece(int x, int y, Vec2<int> winDir)
+        public Piece(int x, int y, Vec2<int> winDir, int wallsCount)
         {
+            wallsLeft = wallsCount;
             this.x = x;
             this.y = y;
             this.winDir = winDir;
