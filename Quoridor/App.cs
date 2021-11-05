@@ -32,9 +32,9 @@ namespace Quoridor
                     playOrder = new PlayerType[] { (PlayerType)val, (PlayerType)Math.Abs((int)val - 1) };
                     if (playOrder[0] != PlayerType.AI)
                     {
-                        Quoridor.currentPlayer = 1;
-                        MiniMaxAI.MakeMove();
-                        output.Run();
+                        // Quoridor.currentPlayer = 1;
+                        // MiniMaxAI.MakeMove();
+                        // output.Run();
                     }
                 }
 

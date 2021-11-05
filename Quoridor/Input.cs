@@ -75,20 +75,21 @@ namespace Quoridor
             if (splitCommand[0] == "white" || splitCommand[0] == "black")
             {
                 game.Start();
-                return splitCommand[0] == "white" ? 1 : 0;
+                return splitCommand[0].ToLower() == "white" ? 1 : 0;
             }
-            var moveType = moves[splitCommand[0]];
+            var moveType = moves[splitCommand[0].ToLower()];
 
-            if (moveType == Quoridor.MoveChoice.WALL) {
+            if (moveType == Quoridor.MoveChoice.WALL) 
+            {
                 var x = splitCommand[1][0] - 'S';
-                var y = +splitCommand[1][1] - 1;
-                var isVertical = splitCommand[1][2] == 'h';
+                var y = splitCommand[1][1] - '1';
+                var isVertical = splitCommand[1][2] == 'v';
                 game.MakeMove(moveType, new dynamic[] { new Vec2<int>(x, y), isVertical });
             }
             else
             {
                 var x = splitCommand[1][0] - 'A';
-                var y = +splitCommand[1][1] - 1;
+                var y = splitCommand[1][1] - '1';
                 game.MakeMove(moveType, new dynamic[] { new Vec2<int>(x, y) });
             }
 

@@ -229,10 +229,10 @@ namespace Quoridor
                     );
         }
 
-        public Quoridor.Turn placeWall(bool isVertical, Vec2<int> target)
+        public Quoridor.Turn placeWall(Vec2<int> target, bool isVertical)
         {
-            if (players[Quoridor.currentPlayer].wallsLeft == 0 || !(1 <= target.x && target.x < size) ||
-                !(1 <= target.y && target.y < size))
+            if (players[Quoridor.currentPlayer].wallsLeft == 0 || !(0 <= target.x && target.x < size-1) ||
+                !(0 <= target.y && target.y < size-1))
                 return new Quoridor.Turn(
                     Quoridor.TurnStatus.WRONG,
                     Quoridor.MoveChoice.WALL,
@@ -243,6 +243,8 @@ namespace Quoridor
             {
                 for (int i = target.y - 1; i <= target.y + 1; i++)
                 {
+                    if (i >= 9 - 1 || i < 0)
+                        continue;
                     var wall = this.walls[target.x, i];
                     if (wall != null && wall.isVertical)
                         return new Quoridor.Turn(
@@ -256,6 +258,8 @@ namespace Quoridor
             {
                 for (int i = target.x - 1; i <= target.x + 1; i++)
                 {
+                    if (i >= 9 - 1 || i < 0)
+                        continue;
                     var wall = this.walls[i, target.y];
                     if (wall != null && !wall.isVertical)
                         return new Quoridor.Turn(

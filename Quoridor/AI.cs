@@ -61,7 +61,7 @@ namespace Quoridor
                 game.players[Quoridor.currentPlayer].winDir);
 
             // args.Add(path[1]);
-            var cell = game.board.board[path[0].x, path[0].x];
+            var cell = game.board.board[path[1].x, path[1].y];
             if (cell.Occupied)
             {
                 var dir = path[1] - playerPos;
@@ -77,7 +77,16 @@ namespace Quoridor
                     if (!(game.board.board[cell2.x, cell2.y].Occupied || game.board.board[path[1].x, path[1].y].walls.Contains(perpDir)))
                         jumps.Add(cell2);
 
-                    args.Add(jumps[App.rand.Next(0, 2)]);
+                    choice = Quoridor.MoveChoice.JUMP;
+                    if (jumps.Count == 2)
+                        if (path.Contains(jumps[0]))
+                            args.Add(jumps[0]);
+                        else if (path.Contains(jumps[1]))
+                            args.Add(jumps[1]);
+                        else
+                            args.Add(jumps[App.rand.Next(0, 2)]);
+                    else
+                        args.Add(jumps[0]);
                 }
                 else
                 {
