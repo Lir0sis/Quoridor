@@ -116,12 +116,43 @@ namespace Quoridor
             else
                 Console.WriteLine($"Current player is {Quoridor.currentPlayer}");
 
-            if (game.lastMove.next == Quoridor.MoveChoice.JUMP)
-                Console.WriteLine("JUMP!");
-            else
-                Console.WriteLine($"Walls left: {game.players[Quoridor.currentPlayer].wallsLeft}");
+
+            Console.WriteLine($"Walls left: {game.players[Quoridor.currentPlayer].wallsLeft}");
 
             Console.SetCursorPosition(0, game.board.size * 2 + 4 + offset.y);
+        }
+    }
+
+    class TesterOutput
+    {
+        static private readonly Dictionary<Quoridor.MoveChoice, string> moves =
+            new Dictionary<Quoridor.MoveChoice, string>
+            { 
+                {Quoridor.MoveChoice.MOVE , "move" },
+                {Quoridor.MoveChoice.JUMP , "jump" },
+                {Quoridor.MoveChoice.WALL , "wall" },
+            };
+        Quoridor game = Quoridor.getInstance();
+
+        public void Run()
+        {
+            if (game.lastMove.result == Quoridor.TurnStatus.WRONG)
+                return;
+            var pos = game.lastMove.pos;
+            var moveType = game.lastMove.choice;
+            string output = moves[moveType];
+
+            if (moveType == Quoridor.MoveChoice.WALL)
+            {
+                var param = game.board.walls[pos.x, pos.y].isVertical ? 'v': 'h';
+                output += $" {(char)('S' + pos.x)}{pos.y + 1}{param}";
+            }
+            else
+            {
+                output += $" {(char)('A' + pos.x)}{pos.y + 1}";
+            }
+
+            Console.WriteLine(output);
         }
     }
 }

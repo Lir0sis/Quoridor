@@ -20,8 +20,8 @@ namespace Quoridor
             new List<Vec2<int>>
             {
                 new Vec2<int> (0, 1),
-                new Vec2<int> (0, -1),
                 new Vec2<int> (1, 0),
+                new Vec2<int> (0, -1),
                 new Vec2<int> (-1, 0)
             };
 
@@ -50,7 +50,7 @@ namespace Quoridor
             board[x, y].player = null;
         }
 
-        private List<Vec2<int>> getWays(Vec2<int> pos, Vec2<int> dir)
+        static public List<Vec2<int>> getWays(Cell[,] board, Vec2<int> pos, Vec2<int> dir)
         {
             var next_cell = board[pos.x, pos.y];
             var ways = new List<Vec2<int>>();
@@ -66,84 +66,90 @@ namespace Quoridor
             return ways;
         }
 
-        public Quoridor.Turn movePiece(int player, Vec2<int> dir)
+        public Quoridor.Turn movePiece(int player, Vec2<int> coords)
         {
             var status = Quoridor.TurnStatus.MOVED;
+            int next_x = coords.x,
+                next_y = coords.y;
 
             var playerPiece = players[player];
-            int x = playerPiece.x, 
+
+            int x = playerPiece.x,
                 y = playerPiece.y;
 
-            int next_x = x + dir.x,
-                next_y = y + dir.y;
+            var dir = new Vec2<int>(next_x - x, next_y - y);
+            if (Math.Abs(dir.x) + Math.Abs(dir.y) != 1)
+                return new Quoridor.Turn(
+                    Quoridor.TurnStatus.WRONG,
+                    Quoridor.MoveChoice.MOVE,
+                    coords
+                    );
 
             if (next_x >= size || next_x < 0 || next_y >= size || next_y < 0)
                 return new Quoridor.Turn(
                     Quoridor.TurnStatus.WRONG,
                     Quoridor.MoveChoice.MOVE,
-                    Quoridor.MoveChoice.NONE,
-                    new Vec2<int>(next_x, next_y)
+                    coords
                     );
 
-            if (board[x, y].walls.Contains(dir))
+            if (board[x, y].walls.Contains(dir) || board[next_x, next_y].Occupied)
                 return new Quoridor.Turn(
                     Quoridor.TurnStatus.WRONG,
                     Quoridor.MoveChoice.MOVE,
-                    Quoridor.MoveChoice.NONE,
-                    new Vec2<int>(next_x, next_y)
+                    coords
                     );
 
-            var next_cell = board[next_x, next_y];
-            if (next_cell.player != null)
-            {
-                if (next_cell.walls.Contains(dir) || board[next_x + dir.x, next_y+ dir.y].player != null)
-                {
-                    var ways = getWays(new Vec2<int>(next_x, next_y), dir);
-
-                    if (ways.Count == 2)
-                        return new Quoridor.Turn(
-                            Quoridor.TurnStatus.MOVED,
-                            Quoridor.MoveChoice.MOVE,
-                            Quoridor.MoveChoice.JUMP,
-                            new Vec2<int>(next_cell.x, next_cell.y),
-                            ways
-                            );
-
-                    else if (ways.Count == 1)
-                    {
-                        next_x += ways[0].x;
-                        next_y += ways[0].y;
-
-                        updatePlayerPos(ref playerPiece, new Vec2<int>(next_x, next_y));
-
-                        status = Quoridor.TurnStatus.JUMPED;
-                        if (hasWon(playerPiece))
-                            status = Quoridor.TurnStatus.WON;
-
-                        return new Quoridor.Turn(
-                            status,
-                            Quoridor.MoveChoice.MOVE,
-                            Quoridor.MoveChoice.NONE,
-                            new Vec2<int>(next_x, next_y)
-                            );
-                    }
-
-                    return new Quoridor.Turn(
-                        Quoridor.TurnStatus.WRONG,
-                        Quoridor.MoveChoice.MOVE,
-                        Quoridor.MoveChoice.NONE,
-                        new Vec2<int>(next_x, next_y)
-                        );
-                }
-                else
-                {
-                    next_x += dir.x; 
-                    next_y += dir.y;
-                }
-            }
-
-            updatePlayerPos(ref playerPiece, new Vec2<int>(next_x, next_y));
-
+            // var next_cell = board[next_x, next_y];
+            
+            // if (next_cell.player != null)
+            // {
+            //     if (next_cell.walls.Contains(dir) || board[next_x + dir.x, next_y+ dir.y].player != null)
+            //     {
+            //         var ways = getWays(new Vec2<int>(next_x, next_y), dir);
+               
+            //         if (ways.Count == 2)
+            //             return new Quoridor.Turn(
+            //                 Quoridor.TurnStatus.MOVED,
+            //                 Quoridor.MoveChoice.MOVE,
+            //                 Quoridor.MoveChoice.JUMP,
+            //                 new Vec2<int>(next_cell.x, next_cell.y),
+            //                 ways
+            //                 );
+               
+            //         else if (ways.Count == 1)
+            //         {
+            //             next_x += ways[0].x;
+            //             next_y += ways[0].y;
+               
+            //             updatePlayerPos(ref playerPiece, new Vec2<int>(next_x, next_y));
+               
+            //             status = Quoridor.TurnStatus.JUMPED;
+            //             if (hasWon(playerPiece))
+            //                 status = Quoridor.TurnStatus.WON;
+               
+            //             return new Quoridor.Turn(
+            //                 status,
+            //                 Quoridor.MoveChoice.MOVE,
+            //                 Quoridor.MoveChoice.NONE,
+            //                 new Vec2<int>(next_x, next_y)
+            //                 );
+            //         }
+               
+            //         return new Quoridor.Turn(
+            //             Quoridor.TurnStatus.WRONG,
+            //             Quoridor.MoveChoice.MOVE,
+            //             Quoridor.MoveChoice.NONE,
+            //             new Vec2<int>(next_x, next_y)
+            //             );
+            //     }
+            //     else
+            //     {
+            //         next_x += dir.x; 
+            //         next_y += dir.y;
+            //     }
+            // }
+            
+            updatePlayerPos(ref playerPiece, coords);
             
             if (hasWon(playerPiece))
                 status = Quoridor.TurnStatus.WON;
@@ -151,8 +157,7 @@ namespace Quoridor
             return new Quoridor.Turn(
                 status,
                 Quoridor.MoveChoice.MOVE,
-                Quoridor.MoveChoice.NONE,
-                new Vec2<int>(next_x, next_y)
+                coords
                 ); 
         }
         
@@ -163,21 +168,55 @@ namespace Quoridor
                 && player.y * Math.Abs(player.winDir.y) == (player.winDir.y + 1) * Math.Abs(player.winDir.y) * half;
         }
 
-        public Quoridor.Turn jumpOver(Quoridor.Turn turn, Vec2<int> dir, int player)
+        public Quoridor.Turn jumpOver(int player, Vec2<int> coords)
         {
-            var crossingPos = turn.pos;
-            var ways = turn.ways;
+            // var crossingPos = turn.pos;
+            // var ways = turn.ways;
+            // 
+            // var next_cell = new Vec2<int>(crossingPos.x + dir.x, crossingPos.y + dir.y);
+            // if (!ways.Contains(dir))
+            //     return new Quoridor.Turn(
+            //         Quoridor.TurnStatus.WRONG,
+            //         Quoridor.MoveChoice.JUMP,
+            //         Quoridor.MoveChoice.NONE,
+            //         new Vec2<int>(next_cell.x, next_cell.y)
+            //         );
 
-            var next_cell = new Vec2<int>(crossingPos.x + dir.x, crossingPos.y + dir.y);
-            if (!ways.Contains(dir))
+            var possibleJumps = new List<Vec2<int>>();
+            var playerPiece = players[player];
+            int x = playerPiece.x, 
+                y = playerPiece.y;
+
+            foreach (var dir in directions) {
+                if (!board[x + dir.x, y + dir.y].Occupied
+                    || board[x, y].walls.Contains(dir)) continue;
+
+                var oponentPos = new Vec2<int>(playerPiece.x + dir.x, playerPiece.y + dir.y);
+                var endPos = oponentPos + dir;
+                if (!(board[endPos.x, endPos.y].Occupied || board[oponentPos.x, oponentPos.y].walls.Contains(dir)))
+                {
+                    possibleJumps.Add(endPos);
+                    continue;
+                }
+
+                var perpDir = new Vec2<int>(Math.Abs(dir.y), Math.Abs(dir.x));
+                var cell1 = oponentPos - perpDir;
+                if (!(board[cell1.x, cell1.y].Occupied || board[oponentPos.x, oponentPos.y].walls.Contains(-perpDir)))
+                    possibleJumps.Add(cell1);
+
+                var cell2 = oponentPos + perpDir;
+                if (!(board[cell2.x, cell2.y].Occupied || board[oponentPos.x, oponentPos.y].walls.Contains(perpDir)))
+                    possibleJumps.Add(cell2);
+            }
+
+            if (!possibleJumps.Contains(coords))
                 return new Quoridor.Turn(
                     Quoridor.TurnStatus.WRONG,
                     Quoridor.MoveChoice.JUMP,
-                    Quoridor.MoveChoice.NONE,
-                    new Vec2<int>(next_cell.x, next_cell.y)
+                    coords
                     );
 
-            updatePlayerPos(ref players[player], next_cell);
+            updatePlayerPos(ref players[player], coords);
 
             var status = Quoridor.TurnStatus.JUMPED;
             if (hasWon(players[player]))
@@ -186,8 +225,7 @@ namespace Quoridor
             return new Quoridor.Turn(
                     status,
                     Quoridor.MoveChoice.JUMP,
-                    Quoridor.MoveChoice.NONE,
-                    new Vec2<int>(next_cell.x, next_cell.y)
+                    coords
                     );
         }
 
@@ -198,8 +236,7 @@ namespace Quoridor
                 return new Quoridor.Turn(
                     Quoridor.TurnStatus.WRONG,
                     Quoridor.MoveChoice.WALL,
-                    Quoridor.MoveChoice.NONE,
-                    new Vec2<int>(target.x, target.y)
+                    target
                     );
 
             if (isVertical)
@@ -211,8 +248,7 @@ namespace Quoridor
                         return new Quoridor.Turn(
                             Quoridor.TurnStatus.WRONG,
                             Quoridor.MoveChoice.WALL,
-                            Quoridor.MoveChoice.NONE,
-                            new Vec2<int>(target.x, target.y)
+                            target
                             );
                 }
             }
@@ -225,8 +261,7 @@ namespace Quoridor
                         return new Quoridor.Turn(
                             Quoridor.TurnStatus.WRONG,
                             Quoridor.MoveChoice.WALL,
-                            Quoridor.MoveChoice.NONE,
-                            new Vec2<int>(target.x, target.y)
+                            target
                             );
                 }
             }
@@ -247,7 +282,7 @@ namespace Quoridor
             bool isPassable = true;
             for (int i = 0; i < players.Length; i++)
             {
-                List<Vec2<int>> path = aStar(new Vec2<int>(players[i].x, players[i].y), players[i].winDir);
+                List<Vec2<int>> path = aStar(board, new Vec2<int>(players[i].x, players[i].y), players[i].winDir);
                 if (path == null || !(path.Count > 0))
                     isPassable = false;
             }
@@ -258,8 +293,7 @@ namespace Quoridor
                 return new Quoridor.Turn(
                     Quoridor.TurnStatus.PLACED,
                     Quoridor.MoveChoice.WALL,
-                    Quoridor.MoveChoice.NONE,
-                    new Vec2<int>(target.x, target.y)
+                    target
                     );
             }
             else
@@ -274,8 +308,7 @@ namespace Quoridor
                 return new Quoridor.Turn(
                     Quoridor.TurnStatus.WRONG,
                     Quoridor.MoveChoice.WALL,
-                    Quoridor.MoveChoice.NONE,
-                    new Vec2<int>(target.x, target.y)
+                    target
                     );
             }
         }
@@ -325,28 +358,29 @@ namespace Quoridor
         private Piece[] createPieces(int n)
         {
             int half = (this.size - 1) / 2;
-
+            int a = n == 2 ? 2 : 1;
             Piece[] pieces = new Piece[n];
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < directions.Count; i+=1*a)
             {
                 int x = (directions[i].x + 1) * half;
                 int y = (directions[i].y + 1) * half;
 
                 var winDir = new Vec2<int>(directions[i].x * -1, directions[i].y * -1);
 
-                pieces[i] = new Piece(x, y, winDir, 20/n);
-                board[x, y].player = pieces[i];
+                var piece = new Piece(x, y, winDir, 20 / n);
+                pieces[i/a] = piece;
+                board[x, y].player = piece;
             }
             return pieces;
         }
 
-        private int getWinDistance(Vec2<int> pos, Vec2<int> winDir)
+        static public int getWinDistance(Vec2<int> pos, Vec2<int> winDir)
         {
-            int half = (this.size - 1) / 2;
+            int half = (9 - 1) / 2;
             return Math.Abs(winDir.x * (pos.x - (half * (winDir.x + 1))) + winDir.y * (pos.y - (half * (winDir.y + 1))));
         }
 
-        private List<Node> getNeighbours(float cost, Vec2<int> pos)
+        public static List<Node> getNeighbours(Cell[,] board, float cost, Vec2<int> pos)
         {
             var neighbours = new List<Node>();
             foreach(var dir in directions) {
@@ -354,7 +388,7 @@ namespace Quoridor
                     continue;
 
                 var cellPos = new Vec2<int>(pos.x + dir.x, pos.y + dir.y);
-                if (cellPos.x < 0 || cellPos.x >= this.size || cellPos.y < 0 || cellPos.y >= this.size)
+                if (cellPos.x < 0 || cellPos.x >= 9 || cellPos.y < 0 || cellPos.y >= 9)
                     continue;
 
                 var cell = board[cellPos.x, cellPos.y];
@@ -367,7 +401,7 @@ namespace Quoridor
 
                     if (next_cell.walls.Contains(dir) || board[cellPos.x + dir.x, cellPos.y + dir.y].player != null)
                     {
-                        var ways = getWays(new Vec2<int>(cellPos.x, cellPos.y), dir);
+                        var ways = getWays(board, new Vec2<int>(cellPos.x, cellPos.y), dir);
 
                         if (ways.Count > 0 && ways.Count < 3)
                             neighbours.Add(new Node(cellPos, new Vec2<float>(cost, 0)));
@@ -378,7 +412,7 @@ namespace Quoridor
             return neighbours;
         }
 
-        struct Node
+        public struct Node
         {
             public Vec2<int> pos;
             public Vec2<float> value;
@@ -388,7 +422,7 @@ namespace Quoridor
                 value = val;
             }
         }
-        public List<Vec2<int>> aStar(Vec2<int> start, Vec2<int> winDir)
+        static public List<Vec2<int>> aStar(Cell[,] board, Vec2<int> start, Vec2<int> winDir)
         {
             var node_path = new Dictionary<Vec2<int>, Vec2<int>?>();
             node_path[start] = null;
@@ -412,7 +446,7 @@ namespace Quoridor
                 }
                 else
                 {
-                    var neighbours = getNeighbours(curr_node.value.x, curr_node.pos);
+                    var neighbours = getNeighbours(board, curr_node.value.x, curr_node.pos);
                     for (int i = 0; i < neighbours.Count; i++)
                     {
                         var node = neighbours[i];

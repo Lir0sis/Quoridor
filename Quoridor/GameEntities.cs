@@ -8,10 +8,30 @@ namespace Quoridor
         public Vec2(T x, T y) { this.x = x; this.y = y; }
         public override bool Equals(object obj)
         {
-            var vec2 = (Vec2<T>) obj;
+            var vec2 = (Vec2<T>)obj;
             if (this.x.Equals(vec2.x) && this.y.Equals(vec2.y))
                 return true;
             return false;
+        }
+
+        public static Vec2<T> operator +(Vec2<T> vec1, Vec2<T> vec2) 
+        {
+            dynamic a = vec1;
+            dynamic b = vec2;
+            return new Vec2<T>(a.x + b.x, a.y + b.y);
+        }
+
+        public static Vec2<T> operator -(Vec2<T> vec1, Vec2<T> vec2)
+        {
+            dynamic a = vec1;
+            dynamic b = vec2;
+            return new Vec2<T>(a.x - b.x, a.y - b.y);
+        }
+
+        public static Vec2<T> operator -(Vec2<T> vec)
+        {
+            dynamic a = vec;
+            return new Vec2<T>(-a.x, -a.y);
         }
     }
 

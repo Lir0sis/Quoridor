@@ -11,59 +11,50 @@ namespace Quoridor
         Quoridor game;
         PlayerType[] playOrder;
         int botsCount;
-        ConsoleInput input;
-        ConsoleOutput output;
+        TesterInput input;
+        TesterOutput output;
 
         static public Random rand = new Random();
         public App() 
         {
             game = Quoridor.getInstance();
-            input = new ConsoleInput();
-            output = new ConsoleOutput();
+            input = new TesterInput();
+            output = new TesterOutput();
         }
 
         public void Run()
         {
-            if (game.lastMove.result == Quoridor.TurnStatus.WRONG
-                && game.lastMove.choice == Quoridor.MoveChoice.NONE 
-                || game.lastMove.result == Quoridor.TurnStatus.WON)
+            if (playOrder == null)
             {
-                Vec2<int> @params = input.Run();
-                if (@params.y != -1)
+                var val = input.Run();
+                if (val != null)
                 {
-                    playOrder = new PlayerType[@params.x];
-                    for (int n = 0; n < @params.y; n++)
+                    playOrder = new PlayerType[] { (PlayerType)val, (PlayerType)Math.Abs((int)val - 1) };
+                    if (playOrder[0] != PlayerType.AI)
                     {
-                        while (true)
-                        {
-                            var i = rand.Next(0, @params.x);
-                            if (playOrder[i] == PlayerType.HUMAN)
-                            {
-                                playOrder[i] = PlayerType.AI;
-                                break;
-                            }
-                        }
+                        Quoridor.currentPlayer = 1;
+                        MiniMaxAI.MakeMove();
+                        output.Run();
                     }
-                    this.botsCount = @params.y;
                 }
+
                 return;
             }
 
-            output.Run();
-
             if (game.lastMove.result == Quoridor.TurnStatus.WON)
+            {
+                playOrder = null;
                 return;
+            }
 
             if (playOrder[Quoridor.currentPlayer] == PlayerType.HUMAN)
                 input.Run();
             else if (playOrder[Quoridor.currentPlayer] == PlayerType.AI)
             {
-                Thread.Sleep(100);
-                AI.MakeMove();
+                MiniMaxAI.MakeMove();
+                output.Run();
             }
 
-            if (game.lastMove.result == Quoridor.TurnStatus.WON)
-                output.Run();
         }
 
         static public void Main()

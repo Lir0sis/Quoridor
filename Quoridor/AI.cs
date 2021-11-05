@@ -4,10 +4,10 @@ using System.Text;
 
 namespace Quoridor
 {
-    class AI
+    class RandomAI
     {
         static public Quoridor game = Quoridor.getInstance();
-        private AI()
+        private RandomAI()
         {
         }
 
@@ -40,6 +40,54 @@ namespace Quoridor
                 bool isVertical = Convert.ToBoolean(App.rand.Next(0, 2));
                 args.Add(isVertical);
                 args.Add(new Vec2<int>(x, y));
+            }
+            game.MakeMove(choice, args.ToArray());
+        }
+    }
+
+    class MiniMaxAI
+    {
+        static public Quoridor game = Quoridor.getInstance();
+        private MiniMaxAI()
+        {
+        }
+        static public void MakeMove()
+        {
+            List<dynamic> args = new List<dynamic>();
+            var playerPos = new Vec2<int>(game.players[Quoridor.currentPlayer].x, game.players[Quoridor.currentPlayer].y);
+            var choice = Quoridor.MoveChoice.MOVE;
+            var path = Board.aStar(game.board.board,
+                playerPos, 
+                game.players[Quoridor.currentPlayer].winDir);
+
+            // args.Add(path[1]);
+            var cell = game.board.board[path[0].x, path[0].x];
+            if (cell.Occupied)
+            {
+                var dir = path[1] - playerPos;
+                if (cell.walls.Contains(dir))
+                {
+                    var jumps = new List<Vec2<int>>();
+                    var perpDir = new Vec2<int>(Math.Abs(dir.y), Math.Abs(dir.x));
+                    var cell1 = path[1] - perpDir;
+                    if (!(game.board.board[cell1.x, cell1.y].Occupied || game.board.board[path[1].x, path[1].y].walls.Contains(-perpDir)))
+                        jumps.Add(cell1);
+
+                    var cell2 = path[1] + perpDir;
+                    if (!(game.board.board[cell2.x, cell2.y].Occupied || game.board.board[path[1].x, path[1].y].walls.Contains(perpDir)))
+                        jumps.Add(cell2);
+
+                    args.Add(jumps[App.rand.Next(0, 2)]);
+                }
+                else
+                {
+                    choice = Quoridor.MoveChoice.JUMP;
+                    args.Add(path[1] + dir);
+                }
+            }
+            else
+            {
+                args.Add(path[1]);
             }
             game.MakeMove(choice, args.ToArray());
         }

@@ -57,4 +57,42 @@ namespace Quoridor
         }
     }
 
+    class TesterInput
+    {
+        static private readonly Dictionary<string, Quoridor.MoveChoice> moves =
+            new Dictionary<string, Quoridor.MoveChoice>
+            {
+                {"move", Quoridor.MoveChoice.MOVE },
+                {"jump", Quoridor.MoveChoice.JUMP },
+                {"wall", Quoridor.MoveChoice.WALL },
+            };
+
+        Quoridor game = Quoridor.getInstance();
+
+        public int? Run()
+        {
+            var splitCommand = Console.ReadLine().Split(new char[0]);
+            if (splitCommand[0] == "white" || splitCommand[0] == "black")
+            {
+                game.Start();
+                return splitCommand[0] == "white" ? 1 : 0;
+            }
+            var moveType = moves[splitCommand[0]];
+
+            if (moveType == Quoridor.MoveChoice.WALL) {
+                var x = splitCommand[1][0] - 'S';
+                var y = +splitCommand[1][1] - 1;
+                var isVertical = splitCommand[1][2] == 'h';
+                game.MakeMove(moveType, new dynamic[] { new Vec2<int>(x, y), isVertical });
+            }
+            else
+            {
+                var x = splitCommand[1][0] - 'A';
+                var y = +splitCommand[1][1] - 1;
+                game.MakeMove(moveType, new dynamic[] { new Vec2<int>(x, y) });
+            }
+
+            return null;
+        }
+    }
 }
