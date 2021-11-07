@@ -19,14 +19,14 @@ namespace Quoridor
             Quoridor.MoveChoice choice = Quoridor.MoveChoice.MOVE;
 
             if (game.players[Quoridor.currentPlayer].wallsLeft != 0)
-                choice = (Quoridor.MoveChoice) App.rand.Next(0, 2);
+                choice = (Quoridor.MoveChoice)App.rand.Next(0, 2);
 
             if (choice == Quoridor.MoveChoice.MOVE)
             {
                 int x = 0,
-                    y = 0; 
+                    y = 0;
                 while (Math.Abs(x) + Math.Abs(y) != 1)
-                { 
+                {
                     x = App.rand.Next(-1, 2);
                     y = App.rand.Next(-1, 2);
                 }
@@ -34,9 +34,9 @@ namespace Quoridor
             }
             else if (choice == Quoridor.MoveChoice.WALL)
             {
-                int x = App.rand.Next(0, game.board.size-2);
-                int y = App.rand.Next(0, game.board.size-2);
-                
+                int x = App.rand.Next(0, game.board.size - 2);
+                int y = App.rand.Next(0, game.board.size - 2);
+
                 bool isVertical = Convert.ToBoolean(App.rand.Next(0, 2));
                 args.Add(isVertical);
                 args.Add(new Vec2<int>(x, y));
@@ -45,10 +45,10 @@ namespace Quoridor
         }
     }
 
-    class MiniMaxAI
+    class aStarAI
     {
         static public Quoridor game = Quoridor.getInstance();
-        private MiniMaxAI()
+        private aStarAI()
         {
         }
         static public void MakeMove()
@@ -56,8 +56,8 @@ namespace Quoridor
             List<dynamic> args = new List<dynamic>();
             var playerPos = new Vec2<int>(game.players[Quoridor.currentPlayer].x, game.players[Quoridor.currentPlayer].y);
             var choice = Quoridor.MoveChoice.MOVE;
-            var path = Board.aStar(game.board.board,
-                playerPos, 
+            var path = Algorithm.aStar(game.board.board,
+                playerPos,
                 game.players[Quoridor.currentPlayer].winDir);
 
             // args.Add(path[1]);
@@ -99,6 +99,21 @@ namespace Quoridor
                 args.Add(path[1]);
             }
             game.MakeMove(choice, args.ToArray());
+        }
+    }
+    class MiniMaxAI
+    {
+        static public Quoridor game = Quoridor.getInstance();
+        private MiniMaxAI()
+        {
+        }
+
+        static public void MakeMove()
+        {
+            //var playerPos = new Vec2<int>(game.players[Quoridor.currentPlayer].x, game.players[Quoridor.currentPlayer].y);
+            var action = Algorithm.miniMax(5, Quoridor.currentPlayer, game.board);
+
+            game.MakeMove(action.Item1, action.Item2);
         }
     }
 }

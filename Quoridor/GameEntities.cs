@@ -40,12 +40,8 @@ namespace Quoridor
         public int x;
         public int y;
         public HashSet<Vec2<int>> walls;
-        public Piece player = null;
-        public bool Occupied { get
-            {
-                return player != null;
-            }
-        }
+        //public Piece player = null;
+        public bool Occupied;
 
         public Cell(int x, int y, HashSet<Vec2<int>> walls)
         {
@@ -54,15 +50,13 @@ namespace Quoridor
             this.walls = walls;
         }
 
-        public Cell deepCopy()
+        public Cell Clone()
         {
             var copy = (Cell)this.MemberwiseClone();
             var walls = new HashSet<Vec2<int>>();
-            Piece player = null;
-            if (this.player != null)
-                player = new Piece(this.player.x, this.player.y, this.player.winDir, this.player.wallsLeft);
-
-            copy.player = player;
+            // Piece player = null;
+            // if (this.player != null)
+            //     player = new Piece(this.player.x, this.player.y, this.player.winDir, this.player.wallsLeft);
 
             Vec2<int>[] coppiedWalls = new Vec2<int>[this.walls.Count];
             this.walls.CopyTo(coppiedWalls);
@@ -86,6 +80,11 @@ namespace Quoridor
             this.y = y;
             this.isVertical = isVertical;
         }
+
+        public Wall Clone()
+        {
+            return (Wall)this.MemberwiseClone();
+        }
     }
 
     class Piece
@@ -94,7 +93,7 @@ namespace Quoridor
         public int y;
         public Vec2<int> winDir;
         public int wallsLeft;
-        private Board board;
+        // private Board board;
 
         public Piece(int x, int y, Vec2<int> winDir, int wallsCount)
         {
@@ -102,7 +101,12 @@ namespace Quoridor
             this.x = x;
             this.y = y;
             this.winDir = winDir;
-            board = Quoridor.getInstance().board;
+            // board = Quoridor.getInstance().board;
+        }
+
+        public Piece Clone()
+        {
+            return (Piece)this.MemberwiseClone();
         }
     }
 }

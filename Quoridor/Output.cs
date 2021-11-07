@@ -26,7 +26,7 @@ namespace Quoridor
                     var cell = game.board.board[j, i];
 
                     Console.SetCursorPosition(j * 2 + offset.x, i * 2 + offset.y);
-                    if (cell.player == currentPlayer)
+                    if (cell.Occupied && cell.x == currentPlayer.x && cell.y == currentPlayer.y)
                         Console.ForegroundColor = ConsoleColor.Red;
                     else if (cell.Occupied)
                         Console.ForegroundColor = ConsoleColor.White;

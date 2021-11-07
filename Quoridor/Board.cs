@@ -16,7 +16,7 @@ namespace Quoridor
         Quoridor game;
 
         //starting sides
-        static private readonly List<Vec2<int>> directions =
+        static public readonly List<Vec2<int>> directions =
             new List<Vec2<int>>
             {
                 new Vec2<int> (0, 1),
@@ -35,6 +35,28 @@ namespace Quoridor
             players = createPieces(playerCount);
             game.players = players;
         }
+
+        public Board Clone()
+        {
+            var copy = (Board)this.MemberwiseClone();
+            copy.board = new Cell[9, 9];
+            copy.walls = new Wall[8, 8];
+            copy.players = new Piece[players.Length];
+            for (int i = 0; i < size; i++)
+                for (int j = 0; j < size; j++)
+                {
+                    copy.board[i, j] = board[i, j].Clone();
+                    if (j >= size - 1 || i >= size - 1)
+                        continue;
+                    copy.walls[i, j] = walls[i, j] != null ? walls[i, j].Clone() : null;
+                }
+
+            for (int i = 0; i < players.Length; i++)
+            {
+                copy.players[i] = players[i].Clone();
+            }
+            return copy;
+        }
         private void updatePlayerPos(ref Piece playerPiece, Vec2<int> nextPos)
         {
             int x = playerPiece.x,
@@ -46,24 +68,8 @@ namespace Quoridor
             playerPiece.x = next_x;
             playerPiece.y = next_y;
 
-            board[next_x, next_y].player = playerPiece;
-            board[x, y].player = null;
-        }
-
-        static public List<Vec2<int>> getWays(Cell[,] board, Vec2<int> pos, Vec2<int> dir)
-        {
-            var next_cell = board[pos.x, pos.y];
-            var ways = new List<Vec2<int>>();
-
-            if (!next_cell.walls.Contains(new Vec2<int>(dir.y, dir.x)) && board[next_cell.x + dir.y, next_cell.y + dir.x].player == null)
-            {
-                ways.Add(new Vec2<int>(dir.y, dir.x));
-            }
-            if (!next_cell.walls.Contains(new Vec2<int>(dir.y * -1, dir.x * -1)) && board[next_cell.x + dir.y * -1, next_cell.y + dir.x * -1].player == null)
-            {
-                ways.Add(new Vec2<int>(dir.y * -1, dir.x * -1));
-            }
-            return ways;
+            board[next_x, next_y].Occupied = true;
+            board[x, y].Occupied = false;
         }
 
         public Quoridor.Turn movePiece(int player, Vec2<int> coords)
@@ -161,11 +167,45 @@ namespace Quoridor
                 ); 
         }
         
-        private bool hasWon(Piece player)
+        public bool hasWon(Piece player)
         {
             int half = (this.size - 1) / 2;
             return player.x * Math.Abs(player.winDir.x) == (player.winDir.x + 1) * Math.Abs(player.winDir.x) * half
                 && player.y * Math.Abs(player.winDir.y) == (player.winDir.y + 1) * Math.Abs(player.winDir.y) * half;
+        }
+
+        public List<Vec2<int>> getPossibleJumps(int player)
+        {
+            var playerPiece = players[player];
+            int x = playerPiece.x,
+                y = playerPiece.y;
+            var possibleJumps = new List<Vec2<int>>();
+            foreach (var dir in directions)
+            {
+                if (board[x, y].walls.Contains(dir)
+                    || !board[x + dir.x, y + dir.y].Occupied) continue;
+
+                var oponentPos = new Vec2<int>(x + dir.x, y + dir.y);
+                var endPos = oponentPos + dir;
+                if (!(endPos.x > 8 || endPos.x < 0 || endPos.y > 8 || endPos.y < 0))  
+                    if (!(board[endPos.x, endPos.y].Occupied || board[oponentPos.x, oponentPos.y].walls.Contains(dir)))
+                    {
+                        possibleJumps.Add(endPos);
+                        continue;
+                    }
+
+                var perpDir = new Vec2<int>(Math.Abs(dir.y), Math.Abs(dir.x));
+                var cell1 = oponentPos - perpDir;
+                if (!(board[cell1.x, cell1.y].Occupied || board[oponentPos.x, oponentPos.y].walls.Contains(-perpDir)))
+                    possibleJumps.Add(cell1);
+
+                var cell2 = oponentPos + perpDir;
+                if (!(board[cell2.x, cell2.y].Occupied || board[oponentPos.x, oponentPos.y].walls.Contains(perpDir)))
+                    possibleJumps.Add(cell2);
+            }
+
+            return possibleJumps;
+
         }
 
         public Quoridor.Turn jumpOver(int player, Vec2<int> coords)
@@ -182,32 +222,7 @@ namespace Quoridor
             //         new Vec2<int>(next_cell.x, next_cell.y)
             //         );
 
-            var possibleJumps = new List<Vec2<int>>();
-            var playerPiece = players[player];
-            int x = playerPiece.x, 
-                y = playerPiece.y;
-
-            foreach (var dir in directions) {
-                if (!board[x + dir.x, y + dir.y].Occupied
-                    || board[x, y].walls.Contains(dir)) continue;
-
-                var oponentPos = new Vec2<int>(playerPiece.x + dir.x, playerPiece.y + dir.y);
-                var endPos = oponentPos + dir;
-                if (!(board[endPos.x, endPos.y].Occupied || board[oponentPos.x, oponentPos.y].walls.Contains(dir)))
-                {
-                    possibleJumps.Add(endPos);
-                    continue;
-                }
-
-                var perpDir = new Vec2<int>(Math.Abs(dir.y), Math.Abs(dir.x));
-                var cell1 = oponentPos - perpDir;
-                if (!(board[cell1.x, cell1.y].Occupied || board[oponentPos.x, oponentPos.y].walls.Contains(-perpDir)))
-                    possibleJumps.Add(cell1);
-
-                var cell2 = oponentPos + perpDir;
-                if (!(board[cell2.x, cell2.y].Occupied || board[oponentPos.x, oponentPos.y].walls.Contains(perpDir)))
-                    possibleJumps.Add(cell2);
-            }
+            var possibleJumps = getPossibleJumps(player);
 
             if (!possibleJumps.Contains(coords))
                 return new Quoridor.Turn(
@@ -279,14 +294,14 @@ namespace Quoridor
                     int dirX = Convert.ToInt32(isVertical) * ((i - target.x) * -2 + 1);
                     int dirY = Convert.ToInt32(!isVertical) * ((j - target.y) * -2 + 1);
 
-                    saved_cells.Add(this.board[i, j].deepCopy());
+                    saved_cells.Add(this.board[i, j].Clone());
                     this.board[i, j].walls.Add(new Vec2<int>(dirX, dirY));
                 }
 
             bool isPassable = true;
             for (int i = 0; i < players.Length; i++)
             {
-                List<Vec2<int>> path = aStar(board, new Vec2<int>(players[i].x, players[i].y), players[i].winDir);
+                List<Vec2<int>> path = Algorithm.aStar(board, new Vec2<int>(players[i].x, players[i].y), players[i].winDir);
                 if (path == null || !(path.Count > 0))
                     isPassable = false;
             }
@@ -373,121 +388,77 @@ namespace Quoridor
 
                 var piece = new Piece(x, y, winDir, 20 / n);
                 pieces[i/a] = piece;
-                board[x, y].player = piece;
+                board[x, y].Occupied = true;
             }
             return pieces;
         }
 
-        static public int getWinDistance(Vec2<int> pos, Vec2<int> winDir)
+        public List<(Quoridor.MoveChoice, dynamic[])> getActions(int player)
         {
-            int half = (9 - 1) / 2;
-            return Math.Abs(winDir.x * (pos.x - (half * (winDir.x + 1))) + winDir.y * (pos.y - (half * (winDir.y + 1))));
-        }
+            var actions = new List<(Quoridor.MoveChoice, dynamic[])>();
 
-        public static List<Node> getNeighbours(Cell[,] board, float cost, Vec2<int> pos)
-        {
-            var neighbours = new List<Node>();
-            foreach(var dir in directions) {
-                if (board[pos.x, pos.y].walls.Contains(dir))
-                    continue;
-
-                var cellPos = new Vec2<int>(pos.x + dir.x, pos.y + dir.y);
-                if (cellPos.x < 0 || cellPos.x >= 9 || cellPos.y < 0 || cellPos.y >= 9)
-                    continue;
-
-                var cell = board[cellPos.x, cellPos.y];
-
-                if (cell.player == null)
-                    neighbours.Add(new Node(cellPos, new Vec2<float>(cost, 0)));
-                else
+            var playerPiece = players[player];
+            int rot = playerPiece.winDir.x + playerPiece.winDir.y;
+            var pos = new Vec2<int>(playerPiece.x, playerPiece.y);
+            
+            foreach(var neighbour in Algorithm.getNonWallNeighbours(board, 0, pos, rot))
+            {
+                var choice = Quoridor.MoveChoice.MOVE;
+                var dir = neighbour.pos - pos;
+                if (Math.Abs(dir.x) + Math.Abs(dir.y) > 1)
+                    choice = Quoridor.MoveChoice.JUMP;
+                actions.Add((choice, new dynamic[] { neighbour.pos }));
+            }
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j < 8; j++) 
                 {
-                    var next_cell = board[cellPos.x, cellPos.y];
-
-                    if (next_cell.walls.Contains(dir) || board[cellPos.x + dir.x, cellPos.y + dir.y].player != null)
+                    var wall = walls[i, j];
+                    if (wall != null) continue;
+                    var canBePlaced = true;
+                    for (int k = j - 1; k <= j + 1; k++)
                     {
-                        var ways = getWays(board, new Vec2<int>(cellPos.x, cellPos.y), dir);
-
-                        if (ways.Count > 0 && ways.Count < 3)
-                            neighbours.Add(new Node(cellPos, new Vec2<float>(cost, 0)));
+                        if (k >= 9 - 1 || k < 0)
+                            continue;
+                        var next_wall = this.walls[i, k];
+                        if (next_wall != null && next_wall.isVertical)
+                        {
+                            canBePlaced = false;
+                            break;
+                        }
                     }
-                }   
-            }
+                    if (canBePlaced)
+                        actions.Add((Quoridor.MoveChoice.WALL, new dynamic[] { new Vec2<int>(i,j), true }));
 
-            return neighbours;
-        }
-
-        public struct Node
-        {
-            public Vec2<int> pos;
-            public Vec2<float> value;
-            public Node(Vec2<int> pos, Vec2<float> val)
-            {
-                this.pos = pos;
-                value = val;
-            }
-        }
-        static public List<Vec2<int>> aStar(Cell[,] board, Vec2<int> start, Vec2<int> winDir)
-        {
-            var node_path = new Dictionary<Vec2<int>, Vec2<int>?>();
-            node_path[start] = null;
-            Vec2<int>? end = null;
-
-            var closed = new HashSet<Vec2<int>>();
-            var opend = new List<Node>();
-            opend.Add(new Node(start, new Vec2<float>(1, 0)));
-
-            while (opend.Count > 0)
-            {
-                var curr_node = opend[0];
-                opend.RemoveAt(0);
-
-                closed.Add(curr_node.pos);
-
-                if (getWinDistance(curr_node.pos, winDir) == 0)
-                {
-                    end = curr_node.pos;
-                    break;
-                }
-                else
-                {
-                    var neighbours = getNeighbours(board, curr_node.value.x, curr_node.pos);
-                    for (int i = 0; i < neighbours.Count; i++)
+                    canBePlaced = true;
+                    for (int k = i - 1; k <= i + 1; k++)
                     {
-                        var node = neighbours[i];
-                        node.value.y = node.value.x + getWinDistance(node.pos, winDir);
-
-                        if (closed.Contains(node.pos))
+                        if (k >= 9 - 1 || k < 0)
                             continue;
-
-                        node_path[node.pos] = curr_node.pos;
-                        if (opend.Contains(node) && opend.Find(x => x.pos.Equals(node.pos)).value.x <= node.value.x)
-                            continue;
-
-                        opend.Add(node);
-                        opend = opend.OrderBy(x => x.value.y).ToList();
+                        var next_wall = this.walls[k, j];
+                        if (next_wall != null && !next_wall.isVertical)
+                        {
+                            canBePlaced = false;
+                            break;
+                        }
                     }
+                    if (canBePlaced)
+                        actions.Add((Quoridor.MoveChoice.WALL, new dynamic[] { new Vec2<int>(i, j), false }));
+
                 }
-            }
-            if(end == null)
-                return null;
 
-            var path = new List<Vec2<int>>();
-            path.Add((Vec2<int>)end);
-
-            var pos = end;
-            while (pos != null)
-            {
-                var next_pos = node_path[(Vec2<int>)pos];
-                if (next_pos == null)
-                    break;
-
-                path.Add((Vec2<int>)next_pos);
-                pos = next_pos;
-            }
-            path.Reverse();
-            return path;
+            return actions;
         }
+        public float getScore(int player)
+        {
+            int enemy = Math.Abs(player - 1);
+            var playerPos = new Vec2<int>(players[player].x, players[player].y);
+            var enemyPos = new Vec2<int>(players[enemy].x, players[enemy].y);
+            // var windDist = Algorithm.getWinDistance(pos, players[player].winDir);
 
+            var playerPath = Algorithm.aStar(board, playerPos, players[player].winDir);
+            var enemyPath = Algorithm.aStar(board, enemyPos, players[enemy].winDir);
 
+            return enemyPath.Count - playerPath.Count;
+        }
     }
 }
